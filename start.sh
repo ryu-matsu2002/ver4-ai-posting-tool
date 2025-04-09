@@ -1,3 +1,7 @@
 #!/bin/bash
+
+# DBマイグレーションを実行
 flask db upgrade
-gunicorn app:app
+
+# アプリを起動（create_app() を使って生成）
+gunicorn 'app:create_app()'

@@ -19,11 +19,11 @@ class Config:
     if db_url and "sslmode" not in db_url:
         db_url += "?sslmode=require"
 
-    # ✅ デフォルトは /tmp にSQLite（Render環境向け）
+    # ✅ デフォルトはローカル用 SQLite パス（Windows対応）
     if not db_url:
-        sqlite_path = os.path.join("/tmp", "app.db")
+        sqlite_path = os.path.join(basedir, "instance", "app.db")
         db_url = f"sqlite:///{sqlite_path}"
 
+    # ←★ クラス内で定義しないと反映されない
     SQLALCHEMY_DATABASE_URI = db_url
-
     SQLALCHEMY_TRACK_MODIFICATIONS = False
