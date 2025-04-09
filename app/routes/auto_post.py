@@ -164,12 +164,13 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
 
 
 
-# 📁 app/routes/auto_post.py
+#📁 app/routes/auto_post.py
 
 @auto_post_bp.route("/auto-post", methods=["GET", "POST"])
 @login_required
 def auto_post():
     sites = Site.query.filter_by(user_id=current_user.id).all()
+    result = []  # 結果リストを用意
 
     if request.method == "POST":
         keyword_text = request.form.get("keywords")
@@ -180,11 +181,12 @@ def auto_post():
         app = current_app._get_current_object()
         thread = threading.Thread(
             target=generate_and_save_articles,
-            args=(app, keywords, site_id, current_user.id, [])  # resultは不要
+            args=(app, keywords, site_id, current_user.id, result)  # 結果を渡す
         )
         thread.start()
 
-        # ✅ 投稿ログページに即リダイレクト
-        return redirect(url_for("admin_log.admin_post_log", site_id=site_id))
+        # ✅ 即リダイレクト：投稿ログページに進捗状況を表示
+        return render_template("admin_log.html", posts=result, site_id=site_id)  # resultを渡して即表示
 
     return render_template("auto_post.html", sites=sites)
+
