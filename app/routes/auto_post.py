@@ -27,14 +27,14 @@ def generate_and_save_articles(app, keywords, site_id, user_id):
             jst = pytz.timezone("Asia/Tokyo")
             now = datetime.now(jst).replace(hour=0, minute=0, second=0, microsecond=0)
 
-            # 📅 30日分のランダムスケジュール生成（10〜20時台）
+            # 📅 30日分のスケジュール（1〜5記事/日・平均4記事・10〜20時）
             all_times = []
             for day_offset in range(30):
                 day = now + timedelta(days=day_offset)
-                num_posts = random.choices([1, 2, 3, 4, 5], weights=[1, 2, 4, 6, 2])[0]  # 平均4記事
+                num_posts = random.choices([1, 2, 3, 4, 5], weights=[1, 2, 4, 6, 2])[0]
                 hours = random.sample(range(10, 21), k=min(num_posts, 11))
                 for h in sorted(hours):
-                    minute = random.choice([0, 15, 30, 45])
+                    minute = random.randint(0, 59)
                     all_times.append(day.replace(hour=h, minute=minute))
 
             all_times_utc = [t.astimezone(pytz.utc) for t in all_times][:len(keywords)]
@@ -100,7 +100,7 @@ WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」
                     elif block:
                         html_lines.append(f"<p>{block}</p>")
 
-                # 画像検索
+                # 画像検索プロンプト
                 image_query_prompt = f"""以下の日本語タイトルに対して、
 Pixabayで画像を探すのに最適な英語の2～3語の検索キーワードを生成してください。
 抽象的すぎる単語（life, businessなど）は避けてください。
@@ -119,7 +119,7 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
                 image_query = image_query_response.choices[0].message.content.strip()
                 image_urls = search_pixabay_images(image_query, max_images=2)
 
-                # HTMLに画像を差し込む
+                # 画像をHTMLに挿入
                 final_html = []
                 image_index = 0
                 for j, line in enumerate(html_lines):
@@ -128,9 +128,8 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
                         image_index += 1
                     final_html.append(line)
 
-                # データベース保存
                 scheduled_post = ScheduledPost(
-                    genre="",  # ジャンル不要になったため空欄
+                    genre="",
                     keyword=kw,
                     title=title,
                     body="\n".join(final_html),

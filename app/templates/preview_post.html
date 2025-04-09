@@ -20,12 +20,12 @@
         <!-- タイトル -->
         <h1 class="text-2xl font-bold text-indigo-700 mb-4">{{ post.title }}</h1>
 
-        <!-- 投稿予定日時 -->
+        <!-- 投稿日時（JST） -->
         <div class="text-sm text-gray-500 mb-6">
-            投稿予定日時：{{ post.scheduled_time.strftime('%Y-%m-%d %H:%M') }}
+            投稿予定日時（JST）：{{ post.scheduled_time | timezone("Asia/Tokyo") | date('%Y-%m-%d %H:%M') }}
         </div>
 
-        <!-- 本文（画像含む） -->
+        <!-- 本文（画像含むHTML） -->
         <div class="prose prose-indigo max-w-none">
             {{ post.body | safe }}
         </div>
