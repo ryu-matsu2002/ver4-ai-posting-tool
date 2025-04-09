@@ -17,7 +17,7 @@ def dashboard():
 
     # 3. サイトが1つもなければサイト設定ページに誘導
     if not sites:
-        return redirect(url_for("site_settings"))
+        return redirect(url_for("site.add_site"))
 
     # 4. site_idが未指定の場合は最初のサイトを選択状態に
     if not selected_site_id:
