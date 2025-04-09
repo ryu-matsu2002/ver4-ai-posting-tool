@@ -51,10 +51,8 @@
       </ul>
     </div>
 
-    <!-- 自動投稿ツールのインクルード -->
-    <div class="bg-white shadow rounded p-6">
-      {% include "auto_post.html" with context %}
-    </div>
+    <!-- 自動投稿ツールのフォームをインクルード -->
+    {% include "auto_post_inner.html" with context %}
   </main>
 
 </div>
