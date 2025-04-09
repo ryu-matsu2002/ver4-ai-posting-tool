@@ -3,7 +3,7 @@
   <h1 class="text-2xl font-bold text-indigo-700 mb-6">🛠️ キーワードから記事生成＆自動投稿</h1>
 
   <!-- 入力フォーム -->
-  <form method="POST" class="bg-white p-6 rounded shadow space-y-6">
+  <form method="POST" action="{{ url_for('dashboard.dashboard') }}" class="bg-white p-6 rounded shadow space-y-6">
     <!-- 🔹 キーワード一括入力 -->
     <div>
       <label for="keywords" class="block text-sm font-semibold text-gray-700 mb-1">
