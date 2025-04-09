@@ -13,14 +13,19 @@
     <nav class="flex flex-col p-4 space-y-3 text-sm">
       <a href="{{ url_for('auto_post.auto_post') }}" class="hover:bg-indigo-700 p-2 rounded transition">🛠️ キーワードから記事生成</a>
       <a href="{{ url_for('site.add_site') }}" class="hover:bg-indigo-700 p-2 rounded transition bg-indigo-700">🌐 サイト追加</a>
-      <form method="GET" action="{{ url_for('admin_log.admin_post_log') }}">
-        <label class="block text-xs text-white mb-1 mt-4">📋 投稿ログを表示</label>
-        <select name="site_id" onchange="this.form.submit()" class="w-full bg-indigo-700 text-white text-sm p-2 rounded">
-          {% for site in current_user.sites %}
-            <option value="{{ site.id }}">{{ site.name }}</option>
-          {% endfor %}
-        </select>
-      </form>
+
+      {% if current_user.sites and current_user.sites|length > 0 %}
+        <form method="GET" action="{{ url_for('admin_log.admin_post_log', site_id=current_user.sites[0].id) }}">
+          <label class="block text-xs text-white mb-1 mt-4">📋 投稿ログを表示</label>
+          <select name="site_id" onchange="this.form.submit()" class="w-full bg-indigo-700 text-white text-sm p-2 rounded">
+            {% for site in current_user.sites %}
+              <option value="{{ site.id }}">{{ site.name }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      {% else %}
+        <div class="mt-4 text-sm text-gray-300">📋 投稿ログはまだ表示できません</div>
+      {% endif %}
     </nav>
   </aside>
 
