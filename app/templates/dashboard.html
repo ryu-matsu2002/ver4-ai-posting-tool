@@ -14,7 +14,7 @@
       <a href="{{ url_for('auto_post.auto_post') }}" class="hover:bg-indigo-700 p-2 rounded transition">🛠️ キーワードから記事生成</a>
       <a href="{{ url_for('site.add_site') }}" class="hover:bg-indigo-700 p-2 rounded transition">🌐 サイト追加</a>
 
-      <form method="GET" action="{{ url_for('admin_log.admin_post_log') }}">
+      <form method="GET" action="{{ url_for('admin_log.admin_post_log', site_id=selected_site_id) }}">
         <label class="block text-xs text-white mb-1 mt-4">📋 投稿ログを表示</label>
         <select name="site_id" onchange="this.form.submit()" class="w-full bg-indigo-700 text-white text-sm p-2 rounded">
           {% for site in sites %}
