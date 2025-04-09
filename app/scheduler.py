@@ -2,9 +2,9 @@
 
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
-from app.models import db, ScheduledPost
-from app.utils.wordpress_post import post_to_wordpress
 from app.extensions import db
+from app.models import ScheduledPost
+from app.utils.wordpress_post import post_to_wordpress
 
 scheduler = BackgroundScheduler()
 scheduler_app = None  # Flaskアプリとの連携用
@@ -17,30 +17,34 @@ def check_and_post():
     with scheduler_app.app_context():
         now = datetime.utcnow()
 
-        # ✅ 1回の実行でランダムに3件だけ投稿
+        # ✅ 今この時点で投稿予定時間を過ぎていて、まだ投稿されていない記事を1件ずつ取得
         posts = ScheduledPost.query.filter(
             ScheduledPost.scheduled_time <= now,
             ScheduledPost.posted == False
-        ).order_by(db.func.random()).limit(3).all()
+        ).order_by(ScheduledPost.scheduled_time.asc()).all()
+
+        if not posts:
+            print("🕐 投稿対象なし（スケジュール待ち）")
+            return
 
         for post in posts:
-            success, msg = post_to_wordpress(
-                post.site_url,
-                post.username,
-                post.app_password,
-                post.title,
-                post.body,
-                post.featured_image
+            success, message = post_to_wordpress(
+                site_url=post.site_url,
+                username=post.username,
+                app_password=post.app_password,
+                title=post.title,
+                content=post.body,
+                image_url=post.featured_image
             )
 
             if success:
                 post.posted = True
                 db.session.commit()
-                print(f"✅ 投稿完了: {post.title}")
+                print(f"✅ 投稿成功: {post.title}")
             else:
-                print(f"❌ 投稿失敗: {post.title} | エラー: {msg}")
+                print(f"❌ 投稿失敗: {post.title} | エラー: {message}")
 
-# ✅ 1分おきにチェックするジョブを登録
+# ✅ スケジューラー起動：毎分チェック
 scheduler.add_job(func=check_and_post, trigger="interval", minutes=1)
 scheduler.start()
 

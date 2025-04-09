@@ -8,7 +8,7 @@ def upload_featured_image(site_url, username, app_password, image_url):
     """
     try:
         image_data = requests.get(image_url).content
-        filename = image_url.split("/")[-1]
+        filename = image_url.split("/")[-1].split("?")[0]  # クエリ除去
 
         headers = {
             "Content-Disposition": f"attachment; filename={filename}",
@@ -23,6 +23,7 @@ def upload_featured_image(site_url, username, app_password, image_url):
             auth=HTTPBasicAuth(username, app_password)
         )
         response.raise_for_status()
+
         media_id = response.json().get("id")
         return media_id
 
@@ -33,20 +34,19 @@ def upload_featured_image(site_url, username, app_password, image_url):
 
 def post_to_wordpress(site_url, username, app_password, title, content, image_url=None):
     """
-    記事をWordPressに投稿する（任意でアイキャッチ画像も設定）
+    記事をWordPressに投稿する（アイキャッチ画像付き）
     """
     try:
-        # アイキャッチ画像のアップロード（任意）
         media_id = None
         if image_url:
             media_id = upload_featured_image(site_url, username, app_password, image_url)
 
-        # 投稿データの構築
         post_data = {
             "title": title,
             "content": content,
             "status": "publish"
         }
+
         if media_id:
             post_data["featured_media"] = media_id
 
@@ -58,8 +58,10 @@ def post_to_wordpress(site_url, username, app_password, title, content, image_ur
         )
         response.raise_for_status()
 
-        print("✅ 投稿成功：", response.json().get("link"))
-        return True, response.json().get("link")
+        post_info = response.json()
+        print("✅ 投稿成功：", post_info.get("link"))
+
+        return True, post_info.get("link")
 
     except Exception as e:
         print(f"[投稿失敗] {e}")

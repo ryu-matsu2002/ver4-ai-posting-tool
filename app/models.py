@@ -13,13 +13,31 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(200), nullable=False)
 
     posts = db.relationship("ScheduledPost", backref="user", lazy=True)
+    sites = db.relationship("Site", backref="user", lazy=True)
+
+    def __repr__(self):
+        return f"<User {self.username}>"
+
+
+class Site(db.Model):
+    __tablename__ = "sites"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    url = db.Column(db.String(255), nullable=False)
+    username = db.Column(db.String(100), nullable=False)
+    app_password = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self):
+        return f"<Site {self.name} ({self.url})>"
 
 
 class ScheduledPost(db.Model):
     __tablename__ = "scheduled_posts"
 
     id = db.Column(db.Integer, primary_key=True)
-    genre = db.Column(db.String(100), nullable=False)
+    genre = db.Column(db.String(100), nullable=True)  # 🔄 ジャンルが任意の場合は nullable=True
     keyword = db.Column(db.String(200), nullable=False)
     title = db.Column(db.String(300), nullable=False)
     body = db.Column(db.Text, nullable=False)
@@ -32,18 +50,7 @@ class ScheduledPost(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    site_id = db.Column(db.Integer)
+    site_id = db.Column(db.Integer, db.ForeignKey("sites.id"), nullable=False)
 
     def __repr__(self):
         return f"<ScheduledPost {self.title[:20]} | {self.scheduled_time}>"
-
-
-class Site(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    url = db.Column(db.String(255), nullable=False)
-    username = db.Column(db.String(100), nullable=False)
-    app_password = db.Column(db.String(255), nullable=False)
-
-    user = db.relationship("User", backref=db.backref("sites", lazy=True))

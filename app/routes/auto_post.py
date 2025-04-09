@@ -27,20 +27,20 @@ def generate_and_save_articles(app, keywords, site_id, user_id):
             jst = pytz.timezone("Asia/Tokyo")
             now = datetime.now(jst).replace(hour=0, minute=0, second=0, microsecond=0)
 
-            # 🔹 1ヶ月分のスケジュールを生成（1日1〜5記事、平均4記事で計120記事）
+            # 📅 30日分のランダムスケジュール生成（10〜20時台）
             all_times = []
             for day_offset in range(30):
                 day = now + timedelta(days=day_offset)
-                num_posts = random.choices([1, 2, 3, 4, 5], weights=[1, 2, 3, 5, 2])[0]  # 平均4記事
-                hours = random.sample(range(6, 23), num_posts)  # 6〜22時
+                num_posts = random.choices([1, 2, 3, 4, 5], weights=[1, 2, 4, 6, 2])[0]  # 平均4記事
+                hours = random.sample(range(10, 21), k=min(num_posts, 11))
                 for h in sorted(hours):
-                    minute = random.choice([0, 10, 20, 30, 40, 50])
+                    minute = random.choice([0, 15, 30, 45])
                     all_times.append(day.replace(hour=h, minute=minute))
 
-            # 🔹 時刻をUTCに変換して上から使う（最大120件）
             all_times_utc = [t.astimezone(pytz.utc) for t in all_times][:len(keywords)]
 
             for i, kw in enumerate(keywords):
+                # タイトル生成
                 title_prompt = f"""あなたはSEOとコンテンツマーケティングの専門家です。
 
 入力されたキーワードを使って
@@ -52,14 +52,6 @@ WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」
 
 【キーワード】
 {kw}
-
-###具体例###
-
-「転職 時期」というキーワードに対する出力文：  
-転職に有利な時期があるって本当ですか？
-
-「転職 面接 聞かれること」というキーワードに対する出力文：  
-転職面接で必ず聞かれることとは？
 """
                 title_response = client.chat.completions.create(
                     model="gpt-4-turbo",
@@ -72,22 +64,23 @@ WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」
                 )
                 title = title_response.choices[0].message.content.strip().split("\n")[0]
 
+                # 本文生成
                 content_prompt = f"""あなたはSEOとコンテンツマーケティングの専門家です。
 
 入力された「Q＆A記事のタイトル」に対しての回答記事を以下の###条件###に沿って書いてください。
 
 ###条件###
-・文章の構成としては、問題提起、共感、問題解決策の順で書いてください。
-・Q＆A記事のタイトルについて悩んでいる人が知りたい事を書いてください。
-・見出し（hタグ）を付けてわかりやすく書いてください
-・記事の文字数は必ず2500文字〜3500文字程度でまとめてください
-・1行の長さは30文字前後にして接続詞などで改行してください。
-・「文章の島」は1行から3行以内にして、文章の島同士は2行空けてください
-・親友に向けて話すように書いてください（ただし敬語を使ってください）
-・読み手のことは「皆さん」ではなく必ず「あなた」と書いてください。
+・問題提起 → 共感 → 解決策の構成で
+・読者が悩んでいることに答える内容で
+・hタグで見出しをつける
+・文字数2500〜3500文字
+・1行30文字前後、文章の島ごとに2行空ける
+・親友に語るように。ただし敬語
+・「あなた」と呼びかけ、「皆さん」は使わない
 
 【タイトル】
-{title}"""
+{title}
+"""
                 content_response = client.chat.completions.create(
                     model="gpt-4-turbo",
                     messages=[
@@ -107,12 +100,13 @@ WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」
                     elif block:
                         html_lines.append(f"<p>{block}</p>")
 
+                # 画像検索
                 image_query_prompt = f"""以下の日本語タイトルに対して、
 Pixabayで画像を探すのに最適な英語の2～3語の検索キーワードを生成してください。
-抽象的すぎる単語（life, business など）は避けてください。
-写真としてヒットしやすい「モノ・場所・情景・体験・風景」などを選んでください。
+抽象的すぎる単語（life, businessなど）は避けてください。
 
-タイトル: {title}"""
+タイトル: {title}
+"""
                 image_query_response = client.chat.completions.create(
                     model="gpt-4-turbo",
                     messages=[
@@ -125,6 +119,7 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
                 image_query = image_query_response.choices[0].message.content.strip()
                 image_urls = search_pixabay_images(image_query, max_images=2)
 
+                # HTMLに画像を差し込む
                 final_html = []
                 image_index = 0
                 for j, line in enumerate(html_lines):
@@ -133,8 +128,9 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
                         image_index += 1
                     final_html.append(line)
 
+                # データベース保存
                 scheduled_post = ScheduledPost(
-                    genre="",  # ジャンル不要にした場合は空欄
+                    genre="",  # ジャンル不要になったため空欄
                     keyword=kw,
                     title=title,
                     body="\n".join(final_html),
@@ -149,6 +145,7 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
                 db.session.add(scheduled_post)
                 db.session.commit()
                 time.sleep(10)
+
         except Exception as e:
             print(f"エラー: {e}")
 
