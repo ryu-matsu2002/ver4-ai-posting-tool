@@ -1,5 +1,3 @@
-# 📁 app/routes/auto_post.py
-
 import os
 import threading
 import time
@@ -19,53 +17,31 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 auto_post_bp = Blueprint("auto_post", __name__)
 
-def generate_and_save_articles(app, genre, site_id, user_id):
+def generate_and_save_articles(app, keywords, site_id, user_id):
     with app.app_context():
         try:
             site = Site.query.filter_by(id=site_id, user_id=user_id).first()
             if not site:
                 return
 
-            # 🔹 現在時刻（日本時間で0時基準）を取得
             jst = pytz.timezone("Asia/Tokyo")
-            now_jst = datetime.now(jst).replace(hour=0, minute=0, second=0, microsecond=0)
+            now = datetime.now(jst).replace(hour=0, minute=0, second=0, microsecond=0)
 
-            # 🔹 ランダムな投稿時間（翌日までの中からランダムな30分単位の時刻を10件分）
-            candidate_times = [
-                now_jst + timedelta(minutes=30 * i)
-                for i in range(48)  # 0:00～23:30
-            ]
-            scheduled_times = sorted(random.sample(candidate_times, 10))
+            # 🔹 1ヶ月分のスケジュールを生成（1日1〜5記事、平均4記事で計120記事）
+            all_times = []
+            for day_offset in range(30):
+                day = now + timedelta(days=day_offset)
+                num_posts = random.choices([1, 2, 3, 4, 5], weights=[1, 2, 3, 5, 2])[0]  # 平均4記事
+                hours = random.sample(range(6, 23), num_posts)  # 6〜22時
+                for h in sorted(hours):
+                    minute = random.choice([0, 10, 20, 30, 40, 50])
+                    all_times.append(day.replace(hour=h, minute=minute))
 
-            # 🔹 キーワード生成プロンプトにジャンルを含める
-            keyword_prompt = f"""ジャンル: {genre}
-
-あなたはGoogle検索に詳しいSEOキーワードの専門家です。
-Google Suggest、Googleトレンド、Ubersuggest、キーワードプランナーの知見をもとに、
-検索ボリュームがありSEOに強い「3語以上の日本語のロングテールキーワード」を10個生成してください。
-
-【条件】
-- 単語数は必ず3語以上にする
-- 単語の区切りは半角スペース（例：転職 未経験 IT）
-- 出力は番号なし、リスト形式（1行に1キーワード）
-- 実際に検索されているような自然なキーワードにしてください
-"""
-            keyword_response = client.chat.completions.create(
-                model="gpt-4-turbo",
-                messages=[
-                    {"role": "system", "content": "あなたはSEOのプロです。"},
-                    {"role": "user", "content": keyword_prompt}
-                ],
-                temperature=0.7,
-                max_tokens=800
-            )
-
-            keywords = [line.strip() for line in keyword_response.choices[0].message.content.splitlines() if line.strip()]
+            # 🔹 時刻をUTCに変換して上から使う（最大120件）
+            all_times_utc = [t.astimezone(pytz.utc) for t in all_times][:len(keywords)]
 
             for i, kw in enumerate(keywords):
-                title_prompt = f"""ジャンル: {genre}
-
-あなたはSEOとコンテンツマーケティングの専門家です。
+                title_prompt = f"""あなたはSEOとコンテンツマーケティングの専門家です。
 
 入力されたキーワードを使って
 WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」を10個考えてください。
@@ -85,7 +61,6 @@ WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」
 「転職 面接 聞かれること」というキーワードに対する出力文：  
 転職面接で必ず聞かれることとは？
 """
-
                 title_response = client.chat.completions.create(
                     model="gpt-4-turbo",
                     messages=[
@@ -97,9 +72,7 @@ WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」
                 )
                 title = title_response.choices[0].message.content.strip().split("\n")[0]
 
-                content_prompt = f"""ジャンル: {genre}
-
-あなたはSEOとコンテンツマーケティングの専門家です。
+                content_prompt = f"""あなたはSEOとコンテンツマーケティングの専門家です。
 
 入力された「Q＆A記事のタイトル」に対しての回答記事を以下の###条件###に沿って書いてください。
 
@@ -115,7 +88,6 @@ WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」
 
 【タイトル】
 {title}"""
-
                 content_response = client.chat.completions.create(
                     model="gpt-4-turbo",
                     messages=[
@@ -141,7 +113,6 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
 写真としてヒットしやすい「モノ・場所・情景・体験・風景」などを選んでください。
 
 タイトル: {title}"""
-
                 image_query_response = client.chat.completions.create(
                     model="gpt-4-turbo",
                     messages=[
@@ -152,7 +123,7 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
                     max_tokens=50
                 )
                 image_query = image_query_response.choices[0].message.content.strip()
-                image_urls = search_pixabay_images(image_query, max_images=3)
+                image_urls = search_pixabay_images(image_query, max_images=2)
 
                 final_html = []
                 image_index = 0
@@ -162,12 +133,8 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
                         image_index += 1
                     final_html.append(line)
 
-                # 🔹 スケジュール投稿時間（JST → UTCに変換）
-                scheduled_time_jst = scheduled_times[i]
-                scheduled_time_utc = scheduled_time_jst.astimezone(pytz.utc)
-
                 scheduled_post = ScheduledPost(
-                    genre=genre,
+                    genre="",  # ジャンル不要にした場合は空欄
                     keyword=kw,
                     title=title,
                     body="\n".join(final_html),
@@ -175,14 +142,13 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
                     site_url=site.url,
                     username=site.username,
                     app_password=site.app_password,
-                    scheduled_time=scheduled_time_utc,
+                    scheduled_time=all_times_utc[i],
                     user_id=user_id,
                     site_id=site.id
                 )
                 db.session.add(scheduled_post)
                 db.session.commit()
                 time.sleep(10)
-
         except Exception as e:
             print(f"エラー: {e}")
 
@@ -191,11 +157,12 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
 def auto_post():
     sites = Site.query.filter_by(user_id=current_user.id).all()
     if request.method == "POST":
-        genre = request.form.get("genre")
+        keyword_text = request.form.get("keywords")
+        keywords = [kw.strip() for kw in keyword_text.splitlines() if kw.strip()]
         site_id = int(request.form.get("site_id"))
 
         app = current_app._get_current_object()
-        thread = threading.Thread(target=generate_and_save_articles, args=(app, genre, site_id, current_user.id))
+        thread = threading.Thread(target=generate_and_save_articles, args=(app, keywords, site_id, current_user.id))
         thread.start()
 
         return redirect(url_for("admin_log.admin_post_log", site_id=site_id))

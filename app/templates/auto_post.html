@@ -13,11 +13,17 @@
 
     <!-- 入力フォーム -->
     <form method="POST" class="bg-white p-6 rounded shadow-md space-y-4">
+      
+      <!-- キーワード一括入力 -->
       <div>
-        <label class="block font-semibold mb-1">ジャンル</label>
-        <input type="text" name="genre" required class="w-full border border-gray-300 rounded px-3 py-2">
+        <label class="block font-semibold mb-1">キーワード（1行に1つ、最大40件）</label>
+        <textarea name="keywords" rows="10" placeholder="例：副業 在宅 主婦&#10;旅行 おすすめ 夏"
+                  required
+                  class="w-full border border-gray-300 rounded px-3 py-2 resize-y"></textarea>
+        <p class="text-sm text-gray-500 mt-1">※キーワードごとに1記事が生成されます</p>
       </div>
 
+      <!-- サイト選択 -->
       <div>
         <label class="block font-semibold mb-1">投稿先のサイトを選択</label>
         <select name="site_id" required class="w-full border border-gray-300 rounded px-3 py-2">
@@ -33,7 +39,6 @@
           ＋ 新しいサイトを追加
         </a>
       </div>
-      
 
       <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
         🚀 記事生成＆保存を開始
