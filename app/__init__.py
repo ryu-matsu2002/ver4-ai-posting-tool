@@ -1,6 +1,5 @@
-from flask import Flask
+from flask import Flask, redirect, url_for
 from flask_moment import Moment
-from app.models import User
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from app.extensions import db
@@ -25,5 +24,14 @@ def create_app():
     # ログイン設定
     login_manager = LoginManager()
     login_manager.init_app(app)
+    login_manager.login_view = "auth.login"  # ログインが必要なページの設定
+
+    # ホームルート設定（ログイン後にダッシュボードにリダイレクト）
+    @app.route("/")
+    def home():
+        return redirect(url_for("dashboard.dashboard"))
+
+    # デバッグモードを有効にする
+    app.debug = True
 
     return app
