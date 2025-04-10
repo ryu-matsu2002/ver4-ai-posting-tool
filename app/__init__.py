@@ -3,6 +3,7 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from app.extensions import db
+from app.routes.dashboard import dashboard_bp
 
 def create_app():
     app = Flask(__name__)
@@ -17,6 +18,8 @@ def create_app():
 
     # アプリケーション設定
     app.config.from_object("config.Config")
+
+    app.register_blueprint(dashboard_bp)
 
     # DBとマイグレーションの設定
     db.init_app(app)
