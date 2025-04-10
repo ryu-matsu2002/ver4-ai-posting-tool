@@ -4,7 +4,7 @@ from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
-from flask_moment import Moment
+from flask_moment import Moment  # ← Momentをインポート
 
 from app.routes.article import article_bp
 from app.routes.title import title_bp
@@ -30,9 +30,9 @@ def load_user(user_id):
 
 def create_app():
     app = Flask(__name__)
-    
+
     # Moment (タイムゾーンや日付フォーマット) 設定
-    moment = Moment(app)
+    moment = Moment(app)  # ← MomentインスタンスをFlaskアプリにバインド
 
     # アプリケーション設定
     app.config.from_object("config.Config")
