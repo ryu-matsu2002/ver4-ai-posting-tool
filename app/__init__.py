@@ -3,7 +3,7 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from app.extensions import db
-from app.routes.dashboard import dashboard_bp
+from app.models import User
 
 def create_app():
     app = Flask(__name__)
@@ -19,8 +19,6 @@ def create_app():
     # アプリケーション設定
     app.config.from_object("config.Config")
 
-    app.register_blueprint(dashboard_bp)
-
     # DBとマイグレーションの設定
     db.init_app(app)
 
@@ -29,10 +27,15 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"  # ログインが必要なページの設定
 
+    # user_loaderの設定
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
     # ホームルート設定（ログイン後にダッシュボードにリダイレクト）
     @app.route("/")
     def home():
-        return redirect(url_for("dashboard.dashboard"))  # ここが正しいエンドポイント名に一致していることを確認
+        return redirect(url_for("dashboard.dashboard"))
 
     # デバッグモードを有効にする
     app.debug = True
