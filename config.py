@@ -17,7 +17,7 @@ class Config:
 
     # ✅ Render用にSSLモード強制追加
     if db_url and "sslmode" not in db_url:
-        db_url += "?sslmode=require"
+        db_url += "?sslmode=require"  # SSL接続を強制
 
     # ✅ デフォルトはローカル用 SQLite パス（Windows対応）
     if not db_url:
