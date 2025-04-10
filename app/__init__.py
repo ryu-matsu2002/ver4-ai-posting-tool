@@ -29,8 +29,7 @@ def create_app():
     # ホームルート設定（ログイン後にダッシュボードにリダイレクト）
     @app.route("/")
     def home():
-        # 修正："dashboard.home" -> "dashboard.dashboard"に変更
-        return redirect(url_for("dashboard.dashboard"))
+        return redirect(url_for("dashboard.dashboard"))  # ここが正しいエンドポイント名に一致していることを確認
 
     # デバッグモードを有効にする
     app.debug = True
