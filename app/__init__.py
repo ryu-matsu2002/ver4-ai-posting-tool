@@ -37,7 +37,6 @@ def create_app():
     def home():
         return redirect(url_for("dashboard.dashboard"))
 
-
     # デバッグモードを有効にする
     app.debug = True
 

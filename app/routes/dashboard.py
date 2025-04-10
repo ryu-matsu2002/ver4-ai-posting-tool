@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import login_required, current_user
 from app.models import ScheduledPost, Site
 
+# dashboard_bpを適切に設定
 dashboard_bp = Blueprint("dashboard", __name__)
 
 @dashboard_bp.route("/dashboard", methods=["GET", "POST"])  # ✅ POST対応を追加
