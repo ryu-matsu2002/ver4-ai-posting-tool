@@ -1,5 +1,3 @@
-# 📁 ファイルパス: app/routes/admin_log.py
-
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from datetime import datetime
@@ -11,13 +9,18 @@ from app.utils.wordpress_post import post_to_wordpress
 
 admin_log_bp = Blueprint("admin_log", __name__)
 
-
 # ✅ 投稿ログ：サイト単位で表示
 @admin_log_bp.route("/admin/log/<int:site_id>")
 @login_required
 def admin_post_log(site_id):
     posts = ScheduledPost.query.filter_by(user_id=current_user.id, site_id=site_id) \
         .order_by(ScheduledPost.scheduled_time.asc()).all()
+
+    # datetime型に変換 (もし文字列の場合)
+    for post in posts:
+        if isinstance(post.scheduled_time, str):
+            post.scheduled_time = datetime.strptime(post.scheduled_time, "%Y-%m-%dT%H:%M")
+
     return render_template("admin_log.html", posts=posts, site_id=site_id)
 
 
