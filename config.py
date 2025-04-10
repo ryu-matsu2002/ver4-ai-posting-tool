@@ -11,7 +11,7 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "default-secret")
 
     # データベースURLを直接設定（RenderのPostgreSQL接続情報）
-    db_url = "postgresql://ver4_ai_posting_db_user:rziTchOqVC1gS6ATZQ69Jw7sMr8mls2B@dpg-cvr280be5dus73835760-a.singapore-postgres.render.com:5432/ver4_ai_posting_db?sslmode=require"
+    db_url = "postgresql://ver4_ai_posting_db_87ft_user:rhOuN8V8uGSoFrr0nNAzL4g3E0giCDuS@dpg-cvrqr0muk2gs73bik450-a.singapore-postgres.render.com/ver4_ai_posting_db_87ft"
     
     # もし環境変数を使用する場合、以下のように設定することもできます
     # db_url = os.getenv("DATABASE_URL", "postgresql://ver4_ai_posting_db_user:rziTchOqVC1gS6ATZQ69Jw7sMr8mls2B@dpg-cvr280be5dus73835760-a.singapore-postgres.render.com:5432/ver4_ai_posting_db?sslmode=require")
