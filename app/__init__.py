@@ -35,7 +35,7 @@ def create_app():
     # ホームルート設定（ログイン後にダッシュボードにリダイレクト）
     @app.route("/")
     def home():
-        return redirect(url_for("dashboard.dashboard"))
+        return redirect(url_for("dashboard_bp.dashboard"))
 
     # デバッグモードを有効にする
     app.debug = True
