@@ -1,5 +1,3 @@
-# 📁 ファイルパス: app/routes/auto_post.py
-
 import os
 import threading
 import time
@@ -58,10 +56,8 @@ WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」
 """
                     title_response = client.chat.completions.create(
                         model="gpt-4-turbo",
-                        messages=[
-                            {"role": "system", "content": "あなたはSEOタイトル作成の専門家です。"},
-                            {"role": "user", "content": title_prompt}
-                        ],
+                        messages=[{"role": "system", "content": "あなたはSEOタイトル作成の専門家です。"},
+                                  {"role": "user", "content": title_prompt}],
                         temperature=0.7,
                         max_tokens=300
                     )
@@ -86,10 +82,8 @@ WEBサイトのQ＆A記事コンテンツに使用する「記事タイトル」
 """
                     content_response = client.chat.completions.create(
                         model="gpt-4-turbo",
-                        messages=[
-                            {"role": "system", "content": "あなたはSEO記事ライターです。"},
-                            {"role": "user", "content": content_prompt}
-                        ],
+                        messages=[{"role": "system", "content": "あなたはSEO記事ライターです。"},
+                                  {"role": "user", "content": content_prompt}],
                         temperature=0.7,
                         max_tokens=3000
                     )
@@ -162,10 +156,6 @@ Pixabayで画像を探すのに最適な英語の2～3語の検索キーワー�
         except Exception as e:
             result_list.append({"title": "-", "status": "❌", "message": f"全体エラー: {e}"})
 
-
-
-#📁 app/routes/auto_post.py
-
 @auto_post_bp.route("/auto-post", methods=["GET", "POST"])
 @login_required
 def auto_post():
@@ -189,4 +179,3 @@ def auto_post():
         return render_template("admin_log.html", posts=result, site_id=site_id)  # resultを渡して即表示
 
     return render_template("auto_post.html", sites=sites)
-

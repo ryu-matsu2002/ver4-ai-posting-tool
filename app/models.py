@@ -1,9 +1,8 @@
-# 📁 ファイルパス: app/models.py
-
 from datetime import datetime
 from flask_login import UserMixin
 from app.extensions import db  # ここからのみ db を使用する（再定義しない）
 
+# Userモデル（既存のもの）
 class User(db.Model, UserMixin):
     __tablename__ = "users"
 
@@ -18,7 +17,7 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"<User {self.username}>"
 
-
+# Siteモデル（新規追加）
 class Site(db.Model):
     __tablename__ = "sites"
 
@@ -29,10 +28,27 @@ class Site(db.Model):
     username = db.Column(db.String(100), nullable=False)
     app_password = db.Column(db.String(255), nullable=False)
 
+    posts = db.relationship("PostLog", backref="site", lazy=True)
+
     def __repr__(self):
         return f"<Site {self.name} ({self.url})>"
 
+# 投稿ログを管理するPostLogモデル（新規追加）
+class PostLog(db.Model):
+    __tablename__ = "post_logs"
 
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    status = db.Column(db.String(50))  # 投稿の状態：成功・失敗など
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    site_id = db.Column(db.Integer, db.ForeignKey('sites.id'), nullable=False)
+    
+    def __repr__(self):
+        return f"<PostLog {self.title[:20]} | {self.status}>"
+
+# ScheduledPostモデル（変更なし）
 class ScheduledPost(db.Model):
     __tablename__ = "scheduled_posts"
 
